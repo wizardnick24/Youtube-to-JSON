@@ -1,0 +1,178 @@
+Project: Spotify Personalized Recommendations Scraper Extension
+Purpose
+
+Create a browser extension (Chrome-first, Firefox optional) that extracts the user’s Spotify Web Player personalized recommendations and outputs structured JSON. Data should be read from the DOM directly, not via API authentication. The JSON can be downloaded or POSTed to a user-defined endpoint.
+
+The extension must work only when the user is actively logged into the Spotify Web Player. All scraping is client-side.
+
+1. Extension Summary
+
+A browser extension that scans the Spotify Web Player UI for recommended items such as:
+
+“Made For You”
+
+“Discover Weekly” (if visible)
+
+“Recommended Songs/Albums/Artists” sections
+
+Homepage recommendation shelves
+
+Extract relevant metadata, assemble final JSON, make it downloadable or sendable to a given URL.
+
+2. Browser Targets
+Primary:
+
+Google Chrome (Manifest V3)
+
+Secondary:
+
+Firefox (Manifest V3 compatibility or fallback to V2)
+
+3. Required Files
+
+manifest.json
+
+Content script(s)
+
+Background service worker
+
+Popup UI
+
+Optional CSS
+
+4. Permissions
+"permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+],
+"host_permissions": [
+    "https://open.spotify.com/*",
+    "*://*/*"
+]
+
+5. Data to Extract
+
+From each recommendation card visible in Web Player:
+
+title (track, playlist, album, or artist name)
+
+type (track, album, playlist, artist)
+
+id extracted from the URL
+
+url (full Spotify URL)
+
+artists array (if applicable)
+
+thumbnailUrl (image source)
+
+section (e.g., “Made For You”, “Recommended for Today”, “For Fans Of…”)
+
+description or subtitle when available
+
+Note: Spotify’s DOM varies by region and account type; selectors must be modular and easily updated.
+
+6. Output JSON Structure
+{
+  "timestamp": "ISO-8601 Datetime",
+  "source": "open.spotify.com",
+  "recommendations": [
+    {
+      "title": "",
+      "type": "",
+      "id": "",
+      "url": "",
+      "artists": [""],
+      "thumbnailUrl": "",
+      "section": "",
+      "description": ""
+    }
+  ]
+}
+
+7. Content Script Behavior
+
+Runs on https://open.spotify.com/*
+
+Identifies major “shelves” of recommendations on the homepage using DOM queries
+
+Extracts each card’s metadata
+
+Sends structured objects to the background worker via messaging
+
+Scraping zones:
+
+Homepage personalized shelves
+
+“Browse” sections showing recommendations
+
+“Made For You” hub (if user navigates there)
+
+Extension should avoid scanning irrelevant UI elements (player controls, sidebars, ads).
+
+8. Popup UI Behavior
+
+UI should contain:
+
+Button: “Scrape Recommendations”
+
+Optional preview pane (scrollable)
+
+Button: “Download JSON”
+
+Input: “POST URL (optional)”
+
+Toggle: “Auto-send after scrape”
+
+Status indicator showing last scrape result or any POST errors
+
+9. Background Worker Behavior
+
+Receives data from content script
+
+Normalizes values and builds final JSON
+
+Saves user settings in chrome.storage.sync
+
+Handles POST when enabled
+
+POST requirements
+
+Method: POST
+
+Header: Content-Type: application/json
+
+Body: JSON object
+
+On failure, popup should report the error clearly.
+
+10. Security & Privacy
+
+No login, token, or cookie extraction
+
+Only reads what is visually present on Spotify’s web player
+
+No data stored except optional POST URL and toggle
+
+User must explicitly initiate scraping unless auto-toggle is enabled
+
+11. Deliverables
+
+Full extension source code
+
+Packaged ZIP ready for Chrome Web Store
+
+Setup documentation including:
+
+Installation
+
+How to scrape
+
+How to configure POST endpoint
+
+What is and isn’t extractable
+
+12. Maintenance Notes
+
+Spotify frequently updates frontend modules. All DOM selectors must be separated into a config file for easy patching.
