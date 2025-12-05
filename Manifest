@@ -1,0 +1,190 @@
+1. Extension Summary
+
+A browser extension that runs on youtube.com, scrapes the homepage and/or sidebar recommended video list, extracts metadata, converts it into structured JSON, and makes the JSON accessible via:
+
+Download button inside extension popup
+
+Optional automatic POST request to user-defined endpoint
+
+Extension must operate using client-side DOM parsing only. No server-side authentication handling.
+
+2. Browser Targets
+Primary:
+
+Google Chrome (Manifest V3)
+
+Secondary (optional):
+
+Firefox (Manifest V3 compatibility layer or Manifest V2 if necessary)
+
+3. Required Files
+3.1 manifest.json
+
+Chrome Manifest V3 compliant.
+
+3.2 content script
+
+Scrapes YouTube recommendation data from DOM.
+
+3.3 background service worker
+
+Handles messaging, optional POST requests, storage, and extension logic not tied to DOM.
+
+3.4 popup UI
+
+A small HTML/CSS/JS interface containing:
+
+“Scrape Recommendations” button
+
+JSON preview (optional)
+
+“Download JSON” button
+
+Input field: remote URL for auto POST
+
+Toggle: “Auto-send JSON after scrape”
+
+4. Permissions Needed
+"permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+],
+"host_permissions": [
+    "https://www.youtube.com/*",
+    "*://*/*"   // for POST to user-defined endpoint
+]
+
+5. Data to Extract
+
+From each recommended video block (homepage and sidebar):
+
+title (string)
+
+videoId (string extracted from URL)
+
+url (full YouTube watch URL)
+
+channelName (string)
+
+channelUrl
+
+thumbnailUrl
+
+viewCount (string if displayed)
+
+publishedTime (string if displayed)
+
+descriptionSnippet (optional, if available)
+
+Additional fields may be included if consistently accessible.
+
+6. Output JSON Structure
+{
+  "timestamp": "ISO-8601 Datetime",
+  "source": "youtube.com",
+  "recommendations": [
+    {
+      "title": "",
+      "videoId": "",
+      "url": "",
+      "channelName": "",
+      "channelUrl": "",
+      "thumbnailUrl": "",
+      "viewCount": "",
+      "publishedTime": "",
+      "descriptionSnippet": ""
+    }
+  ]
+}
+
+7. Content Script Behavior
+
+Runs on:
+
+https://www.youtube.com/
+https://www.youtube.com/* 
+
+
+Identifies recommended items from the following DOM areas:
+
+Homepage grid
+
+Sidebar next to currently playing video
+
+“Up Next” and “Mix” carousels (optional)
+
+Extracts fields listed above.
+
+Sends data to background worker using chrome.runtime.sendMessage.
+
+8. Popup UI Behavior
+
+Button: “Scrape Now”
+
+Triggers content script scrape
+
+Text input: “POST URL (optional)”
+
+Toggle: “Auto-send after scrape”
+
+Button: “Download JSON”
+
+Generates recommendations.json
+
+Status bar indicating last scrape timestamp
+
+9. Background Worker Behavior
+
+Receives scraped data
+
+Builds final JSON object
+
+Optional: POST JSON to remote endpoint
+
+Stores POST URL + toggle state in chrome.storage.sync
+
+POST Requirements
+
+Method: POST
+
+Headers:
+
+Content-Type: application/json
+
+
+Body: full JSON object described earlier
+
+Should handle errors gracefully.
+
+10. Security & Privacy
+
+No server-side login handling
+
+No collection of cookies or credentials
+
+All scraping occurs on client-side
+
+Only user-defined endpoints may receive data
+
+Extension must not store or transmit data unless user explicitly enables POST
+
+11. Deliverables
+
+Full extension source code
+
+Zipped package ready for Chrome Web Store submission
+
+Short documentation file:
+
+Installation
+
+How to run scraping
+
+How to configure POST endpoint
+
+Limitations (such as DOM structure changes)
+
+12. Maintenance Notes
+
+YouTube changes DOM frequently. Extension must isolate selectors into a centralized config so updates are easy.
